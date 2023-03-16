@@ -9,9 +9,14 @@ This project provides an Adaptive Large Neighborhood Search framework for (singl
 - [Table of Contents](#table-of-contents)
 - [Background knowledge](#background-knowledge)
   - [EVSP](#evsp)
+    - [Problem Description](#problem-description)
+    - [Notations](#notations)
   - [ALNS](#alns)
 - [Structure of the framework](#structure-of-the-framework)
   - [Data structure](#data-structure)
+    - [`EVSPClass`](#evspclass)
+    - [`DutyClass`](#dutyclass)
+  - [`ScheduleClass`](#scheduleclass)
   - [Algorithm components](#algorithm-components)
 - [Examples](#examples)
 
@@ -23,13 +28,27 @@ This project provides an Adaptive Large Neighborhood Search framework for (singl
 
 ## EVSP
 
+### Problem Description
+
+### Notations
+
 ## ALNS
+
+---
 
 # Structure of the framework
 
 ## Data structure
 
+### `EVSPClass`
+
+### `DutyClass`
+
+## `ScheduleClass`
+
 ## Algorithm components
+
+---
 
 # Examples
 
