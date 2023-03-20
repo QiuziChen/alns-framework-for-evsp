@@ -9,38 +9,83 @@ import pandas as pd
 class EVSP():
 
     """
-    An EVSP is a model to store data of nodes, arcs and params in an EVSP.
-    It's mainly used to pass params to other objectives or functions.
+    An EVSP object is used to store timetables and network params.
+    Network params include data of nodes, arcs, vehicles and charging stations.
     """
-
-    __slots__ = ['timetable','k_num','n','K','T','F','R','A','I','s_i','t_i','t_ij','e_ki','e_kij','line_change','nonlinear_charge','E_k','c_kb','a_kb','m_k','B_k','v_k','sigma','capacity','U','delta','s_r','C_r','c_k','c_e','c_t','calLaborCost']
 
     def __init__(
         self,
         timetable:pd.DataFrame, 
-        k_num=3, 
-        sigma=0.2,
-        line_change=True,
-        nonlinear_charge=False,
-        delta=10,
-        U=3,
-        capacity=10,
-        cPower=60,
-        calLaborCost=True,
-        capRelatedCons=False
+        stationCap=0, # model param, charging station capacity
+        nonLinearCharging=False, # model param, non-linear charging is not considered when False 
+        calVehCost=True, # model param, whether to calculate vehicle cost
+        calElecCost=True, # model param, whether to calculate electricity cost
+        calLaborCost=True, # model param, whether to calculate labor cost
+        k_num=1, # vehicle param, number of vehicle types
+        batteryLB=0.2, # vehicle param, lower bound of battery level
+        batteryUB=1.0, # vehicle param, upper bound of battery level 
+        delta=10, # operating param, minimum time interval / min
+        U=3, # operating param, number of delta in a fixed charging duration
+        lineChange=True, # operating param, whether line change activities are allowed for BEBs
+        chargingPower=60, # fixed charging power / kWh
     ):
         """
+        0 [timetable]
         timetable: DataFrame with columns=['ID','Route','StartTime','StartTimeMin','TravelTimeMin','Consumption']
-        cPower: fixed charging power (output of chargers)
-        calLaborCost: whether or not to cal labor cost
-        capRelatedCons: whether or not to use weight(capacity)-related consumptions
+        
+        1 [model param]
+        stationCap: [model param] charging station capacity, default=0 means capacity constraints are not considered
+        nonLinearCharging: [model param] default=False means non-linear charging is not considered
+        calVehCost: [model param] whether to calculate vehicle cost, default=True
+        calElecCost: [model param] whether to calculate electricity cost, default=True
+        calLaborCost: [model param] whether to calculate labor cost, default=True
+
+        2 [vehicle param]
+        k_num: [vehicle param] number of vehicle types, default=1
+        batteryLB: [vehicle param] lower bound of battery level, default=0.2
+        batteryUB: [vehicle param] upper bound of battery level, default=1.0
+
+        3 [operating param]
+        delta: [operating param] minimum time interval, default=10(min)
+        U: [operating param] number of delta in a fixed charging duration, default=3 (delta=10, U=3 means the fixed charging duration=30min)
+        lineChange: [operating param] whether line change activities are allowed for BEBs, default=True
+        
+        4 [charging param]
+        chargingPower: [charging param] fixed charging power (output of chargers)
         """
+        pass
+
+
+    def setVehTypes(self, capRelatedCons=False):
+        """
+        Set vehicle types information.
+        """
+        pass
+
+
+    def setChargingFunc(self, func):
+        """
+        Set charging function.
+        """
+        pass
+
+
+    def plotChargingFunc(self):
+        """
+        Plot charging curve.
+        """
+        pass
+
+
+    def createModel(self):
+
         # --- basic data ---
         
         self.k_num = k_num  # number of vehicle types
         self.K = list(range(1, self.k_num+1))  # set of vehicle types
         self.E_k = {1: 100, 2: 170, 3: 258}  # battery capacity
-        self.sigma = sigma  # safe battery level [0,1]
+        self.batteryLB = batteryLB  # lower bound of safe battery level [0,1]
+        self.batteryUB = batteryUB  # upper bound of safe battery level [0,1]
         self.delta = delta  # time interval for recharging time division
         self.U = U  # fixed number of unit intervals to recharge
 
@@ -60,8 +105,8 @@ class EVSP():
             self.t_i[f] = 0
         self.t_i['o'] = 0
         ## set of arcs
-        self.line_change = line_change
-        if self.line_change == True:
+        self.lineChange = lineChange
+        if self.lineChange == True:
             self.A = [('o', j) for j in self.T] \
                     + [(i, j) for i in self.T for j in self.T if (self.s_i[i]+self.t_i[i]<=self.s_i[j])] \
                     + [(i, f) for i in self.T for f in self.F if i==int(f[1:])] \
@@ -128,8 +173,8 @@ class EVSP():
         
         # --- piecewise linear function ---
 
-        self.nonlinear_charge = nonlinear_charge
-        if self.nonlinear_charge == True:
+        self.L = L
+        if self.L == True:
             self.c_kb = {1:[0, 80, 100, 150, 300], 2:[0, 136, 170, 255, 400], 3:[0, 206.4, 258, 387, 500]}  # charging time for break point
             self.a_kb = {1:[0.0, 0.8, 0.9, 1.0, 1.0], 2:[0.0, 0.8, 0.9, 1.0, 1.0], 3:[0.0, 0.8, 0.9, 1.0, 1.0]}  # SOC for break point
             self.m_k = {k: len(self.c_kb[k]) for k in self.K}  # number of break point
@@ -177,6 +222,7 @@ class EVSP():
         self.calLaborCost = calLaborCost
         self.c_t = 0.5  # unit time cost, CNY/min
 
+
     def printParams(self):
         """
         Print parameters of EVSP. 
@@ -185,9 +231,9 @@ class EVSP():
         print("Number of Trips:", self.n)
         print("Number of Vehicle Types:", self.k_num)
         print("Battery Capacity:", self.E_k)
-        print("Safe Battery Level:", self.sigma)
+        print("Safe Battery Level:", self.batteryLB)
         print("Station Capacity:", self.capacity)
-        print("Allow Line Change:", self.line_change)
-        print("Charging Function:", "non-linear" if self.nonlinear_charge else "linear")
+        print("Allow Line Change:", self.lineChange)
+        print("Charging Function:", "non-linear" if self.L else "linear")
         print("Time Interval:", self.delta)
         print("Recharging Time:", self.delta*self.U)

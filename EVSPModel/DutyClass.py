@@ -61,7 +61,7 @@ class Duty():
             else:
                 y = y - self.evsp.e_ki[self.K][s] - self.evsp.e_kij[self.K][(s,self.S[i+1])]
 
-            if y < self.evsp.sigma * self.evsp.E_k[self.K]:  # if battery level less than safe level
+            if y < self.evsp.batteryLB * self.evsp.E_k[self.K]:  # if battery level less than safe level
                 feasibility = False
                 break
         return feasibility

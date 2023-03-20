@@ -159,10 +159,10 @@ class Gurobi4EVSP():
         for i in T.union(F):
             for k in K:
                 self.model.addConstr(
-                    y_ki[k,i] >= self.evsp.sigma*self.evsp.E_k[k]
+                    y_ki[k,i] >= self.evsp.batteryLB*self.evsp.E_k[k]
                 )
                 self.model.addConstr(
-                    y_ki[k,i] <= self.evsp.E_k[k]
+                    y_ki[k,i] <= self.evsp.batteryUB*self.evsp.E_k[k]
                 )
         ## (12)
         for k in K:
