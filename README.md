@@ -2,7 +2,7 @@
 
 This project provides an Adaptive Large Neighborhood Search (ALNS) framework for (single depot & charging station) electric vehicle scheduling problem (EVSP).
 
-The package requirements, data structure and details of algorithm design will be introduced below. A simple tutorial will help you better understand how to use the framework to solve EVSP and extend it by designing your own destroy and repair operators.
+Package requirements, data structure and details of algorithm design will be introduced below. A simple tutorial will help you better understand how to use the framework to solve EVSP and extend it by designing your own destroy and repair operators.
 
 ---
 
