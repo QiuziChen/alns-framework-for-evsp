@@ -16,52 +16,81 @@ class EVSP():
     def __init__(
         self,
         timetable:pd.DataFrame, 
-        stationCap=0, # model param, charging station capacity
-        nonLinearCharging=False, # model param, non-linear charging is not considered when False 
         calVehCost=True, # model param, whether to calculate vehicle cost
         calElecCost=True, # model param, whether to calculate electricity cost
         calLaborCost=True, # model param, whether to calculate labor cost
-        k_num=1, # vehicle param, number of vehicle types
         batteryLB=0.2, # vehicle param, lower bound of battery level
         batteryUB=1.0, # vehicle param, upper bound of battery level 
+        stationCap=-1, # model param, charging station capacity
         delta=10, # operating param, minimum time interval / min
         U=3, # operating param, number of delta in a fixed charging duration
         lineChange=True, # operating param, whether line change activities are allowed for BEBs
-        chargingPower=60, # fixed charging power / kWh
     ):
         """
         0 [timetable]
         timetable: DataFrame with columns=['ID','Route','StartTime','StartTimeMin','TravelTimeMin','Consumption']
         
         1 [model param]
-        stationCap: [model param] charging station capacity, default=0 means capacity constraints are not considered
-        nonLinearCharging: [model param] default=False means non-linear charging is not considered
         calVehCost: [model param] whether to calculate vehicle cost, default=True
         calElecCost: [model param] whether to calculate electricity cost, default=True
         calLaborCost: [model param] whether to calculate labor cost, default=True
 
         2 [vehicle param]
-        k_num: [vehicle param] number of vehicle types, default=1
         batteryLB: [vehicle param] lower bound of battery level, default=0.2
         batteryUB: [vehicle param] upper bound of battery level, default=1.0
 
         3 [operating param]
+        stationCap: [model param] charging station capacity, default=-1 means capacity constraints are not considered
         delta: [operating param] minimum time interval, default=10(min)
         U: [operating param] number of delta in a fixed charging duration, default=3 (delta=10, U=3 means the fixed charging duration=30min)
         lineChange: [operating param] whether line change activities are allowed for BEBs, default=True
-        
-        4 [charging param]
-        chargingPower: [charging param] fixed charging power (output of chargers)
         """
-        pass
+        
+        self.timetable = timetable
+        self.stationCap = stationCap
+        self.calVehCost = calVehCost
+        self.calElecCost = calElecCost
+        self.calLaborCost = calLaborCost
+        self.batteryLB = batteryLB
+        self.batteryUB = batteryUB
+        self.delta = delta
+        self.U = U
+        self.lineChange = lineChange
 
-
-    def setVehTypes(self, capRelatedCons=False):
+    def setVehTypes(
+            self,
+            k_num,
+            E_k:dict,
+            capRelatedCons=False,
+            benchCap=220,
+            consIncRate=0.000297,
+    ):
         """
         Set vehicle types information.
+        k_num: number of vehicle types
+        E_k: battery capacity of each type, dict, indices should be integer start from 1
+        capRelatedCons: whether to adjust energy consumption according to battery capacity
+        benchCap: if adjust consumption, a benchmark capacity should be set
+        consIncRate: assuming a linear relationship between energy consumption and battery capaicty, the coefficient or increasing rate should be set
+        """
+        self.k_num = k_num
+
+        if list(E_k.keys())[0] != 1:
+            raise KeyError("Indices of vehicle types should be integers beginning at 1.")
+        elif len(E_k.keys()) != k_num:
+            raise ValueError("Length of E_k should be equal to k_num.")
+        else:
+            self.E_k = E_k
+
+        self.capRelatedCons = capRelatedCons
+        self.benchCap = benchCap
+        self.consIncRate = consIncRate
+
+    def setCosts(self):
+        """
+        Set costs value.
         """
         pass
-
 
     def setChargingFunc(self, func):
         """
