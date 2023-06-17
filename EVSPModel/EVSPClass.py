@@ -29,12 +29,12 @@ class EVSP():
         timetable: DataFrame with columns=['ID','Route','StartTime','StartTimeMin','TravelTimeMin','Consumption']
         
         [operating param]
-        batteryLB: [operating param] lower bound of battery level, default=0.2
-        batteryUB: [operating param] upper bound of battery level, default=1.0
-        stationCap: [operating param] charging station capacity, default=-1 means capacity constraints are not considered
-        delta: [operating param] minimum time interval, default=10(min)
-        U: [operating param] number of delta in a fixed charging duration, default=3 (delta=10, U=3 means the fixed charging duration=30min)
-        lineChange: [operating param] whether line change activities are allowed for BEBs, default=True
+        batteryLB: lower bound of battery level, default=0.2
+        batteryUB: upper bound of battery level, default=1.0
+        stationCap: charging station capacity, default=-1 means capacity constraints are not considered
+        delta: minimum time interval, default=10(min)
+        U: number of delta in a fixed charging duration, default=3 (delta=10, U=3 means the fixed charging duration=30min)
+        lineChange: whether line change activities are allowed for BEBs, default=True
         """
         
         self.timetable = timetable
@@ -96,7 +96,7 @@ class EVSP():
         if calVehCost or calElecCost or calElecCost:
             self.calVehCost = calVehCost
             self.calElecCost = calElecCost
-            self.calLaborCost = calTimeCost
+            self.calTimeCost = calTimeCost
         else:
             raise ValueError("At least one cost item should be considered.")
         
