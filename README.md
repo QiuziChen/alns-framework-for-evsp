@@ -73,7 +73,28 @@ An EVSP object is used to initialize and store the *timetable* and *network para
 
 ### 2.1.2 `Duty`
 
+A Duty object storage the schedule of a single bus including trip nodes, charging events, and charging time assignment.
+
+- `__init__()`: A Duty object is initialized with the following parameters:
+  - `evsp`
+  - `type`
+  - `tripChain`
+  - `chargingTime`
+- `checkEnergyFeasibility()`: Return True if a duty can meet the energy constraint.
+- `calCost()`: Calculate the cost of a duty.
+
 ### 2.1.3 `Schedule`
+
+A Schedule object consists of a series of vehicles with their service trips and charging activities scheduled according to a given timetable.
+
+- `__init__()`: A Schedule object is initialized with the following parameters:
+  - `evsp`
+  - `schedule`: initial schedule, a list of duties (or empty list)
+  - `R`: initial charging time assignment, a list of time divisions
+- `addDuty`, `delDuty`, `sortDuty`
+- `addR`, `delR`, `updateR`
+- `checkEnergyFeasibility`
+- 
 
 ## 2.2 Algorithm components
 
