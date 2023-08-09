@@ -2,7 +2,7 @@
 
 This project provides an **Adaptive Large Neighborhood Search (ALNS)** framework for (single depot & charging station) **electric vehicle scheduling problem (EVSP)**.
 
-Data structure and details of algorithm design will be introduced below. A simple tutorial will help you better understand how to use the framework to solve EVSP and extend it by designing your own destroy and repair operators.
+Data structure and details of algorithm design will be introduced below. A simple tutorial will help you better understand how to use the framework to solve EVSP.
 
 # Table of Contents
 
@@ -18,13 +18,18 @@ Data structure and details of algorithm design will be introduced below. A simpl
     - [2.1.2 `Duty`](#212-duty)
     - [2.1.3 `Schedule`](#213-schedule)
   - [2.2 Algorithm components](#22-algorithm-components)
+    - [2.2.1 `ALNS`](#221-alns)
+    - [2.2.2 `InitialSolution`](#222-initialsolution)
+    - [2.2.3 `WeightsManagement`](#223-weightsmanagement)
+    - [2.2.4 `RemoveOperators`](#224-removeoperators)
+    - [2.2.5 `InsertOperators`](#225-insertoperators)
 - [3 Tutorial](#3-tutorial)
   - [3.1 Input data](#31-input-data)
-  - [3.2 Create model](#32-create-model)
-  - [3.3 Solve](#33-solve)
-  - [3.4 Develop your own operators](#34-develop-your-own-operators)
+  - [3.2 Solve](#32-solve)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+---
 
 # 1 Background knowledge
 
@@ -33,6 +38,8 @@ Data structure and details of algorithm design will be introduced below. A simpl
 ## 1.1 EVSP
 
 ### 1.1.1 Problem Description
+
+We consider a single-depot bus network with one charging station and multiple types of BEBs. At the beginning of the operation, vehicles are dispatched from the depot to terminals for the day’s service. After finishing all tasks, they return to the depot to park and get charged. During the operation, vehicles are allowed to dwell or park at terminals between service tasks and get recharged at the charging station, which is integrated into the terminal. The EVSP aims to find the optimal vehicle schedule, charging plan and fleet composition of the network.
 
 ### 1.1.2 Assumptions
 
@@ -43,6 +50,8 @@ Data structure and details of algorithm design will be introduced below. A simpl
 3. **Fully night charging**: Vehicles will be fully charged at the depot after finishing all tasks for the day to ensure that vehicles have enough power for the next day’s operation. Charging resources at the depot are assumed sufficient.
 
 ## 1.2 ALNS
+
+The ALNS algorithm [(Ropke & Pisinger, 2006)](https://doi.org/10.1287/trsc.1050.0135), which is widely used for varied kinds of vehicle routing problems (VRP) with high efficiency, is employed to solve the EVSP. The ALNS explores the neighborhood by **destroying** and **repairing** the current solution to increase the search range of the search space, and improve the probability of obtaining a better solution. A **greedy insertion algorithm** is used to construct initial solutions. A **roulette wheel selection** and an **adaptive weight adjustment method** are employed for operator selection, and the **simulated annealing** algorithm is used as the acceptance criteria. The algorithm terminates when $n$ iterations are executed, or $n'$ iterations occur without improvements.
 
 # 2 Structure of the framework
 
@@ -61,7 +70,6 @@ An EVSP object is used to initialize and store the *timetable* and *network para
 - `__init__()`: initialize function, including the following attributes:
   - `timetable`: start time, travel time and energy consumption of each trip
   - `batteryLB`: lower safe bound of battery remaining level (0.0-1.0)
-  - `batteryUB`: upper safe bound of battery remaining level (0.0-1.0)
   - `stationCap`: number of chargers in the station
   - `delta`: time interval
   - `U`: the number of interval in a fixed charging duration
@@ -107,13 +115,134 @@ A Schedule object consists of a series of vehicles with their service trips and 
 
 ## 2.2 Algorithm components
 
+### 2.2.1 `ALNS`
+
+An `ALNS` object stores the parameters and results of the algorithm, and all the components are aggregated into it.
+
+- `__init__()`:
+  - `evsp`: an `EVSP` object.
+  - `iterMax`: the maximum iteration number.
+  - `nMax`: the maximum number of trips to remove in one iteration.
+  - `nMin`: the minimum number of trips to remove in one iteration.
+  - `T0`: initial temperature of simulated annealing.
+  - `alpha`: cooling rate of the temperature (0,1).
+  - `r`: reaction factor when update weights (0,1).
+  - `enePenalty`: penalty when violating energy constraints.
+  - `capPenalty`: penalty when violating capacity constraints.
+  - `chargeProb`: probability of charging insertion for random insertion.
+  - `segLength`: segment length for updating weights.
+  - `terminate`: whether to terminate when no improvement.
+  - `terminateLength`: length of iteration to check improvement.
+  - `printLog`: whether to print solving log.
+- `solve`: Aggregate all components to perform the solving procedure.
+- `plotWeights`: Display historical variation of weights of different operators.
+- `plotEvaluation`: Display historical cost variation.
+
+### 2.2.2 `InitialSolution`
+
+The `InitialSolution` profile contains two initialization methods:
+
+- `initialize`: Provide initlaized feasible solution using greedy heuristic.
+- `initialize_nighCharge`: Provide initlaized feasible solution for night charging mode in which buses are not allowed to get charged during daytime.
+
+### 2.2.3 `WeightsManagement`
+
+A `Weights` object is used to store the scores and weights of remove operators and insert operators, and select operators using roulette wheel.
+
+### 2.2.4 `RemoveOperators`
+
+Three remove operators are provided:
+
+- `randomRemoval`
+- `timeRelatedRemoval`
+- `neighborRemoval`
+
+### 2.2.5 `InsertOperators`
+
+Three insert operators are provided:
+
+- `randomInsert`
+- `greedyInsert`
+
 # 3 Tutorial
 
 ## 3.1 Input data
 
-## 3.2 Create model
+```python
+import pandas as pd
+from EVSPModel import EVSP
 
-## 3.3 Solve
+# read timetable
+timetable = pd.read_excel('Data\T275_Ave.xlsx')
 
-## 3.4 Develop your own operators
+# initialize evsp object
+evsp = EVSP(timetable)
 
+# set parameters
+evsp.setVehTypes()
+evsp.setCosts()
+evsp.setChargingFunc()
+
+# create model
+evsp.createModel()
+```
+
+Using the above code can initalize an `EVSP` object with the default parameters. However, all the parameters including operation, network and vehicle parameters can be self-defined. The parameters and charging function can be display by the following code.
+
+```python
+evsp.printParams()
+```
+
+```python
+evsp.plotChargingFunc()
+```
+
+![chargingFunc](figures/plot%20charging%20func-linear.png)
+
+## 3.2 Solve
+
+The solving procedure is quite simple.
+
+```python
+alns = ALNS(evsp)
+alns.solve()
+```
+
+Functions for display the results are also provided.
+
+```python
+alns.plotWeights()
+```
+
+![weights](figures/plot%20weights.png)
+
+```python
+alns.plotEvaluation()
+```
+
+![evaluation](figures/plot%20evaluation.png)
+
+```python
+bestS = alns.bestSchedule  # the best schedule stored in the ALNS object
+bestS.plotTimetable()
+```
+
+![schedule](figures/plot%20schedule.png)
+
+```python
+bestS.costBar()
+```
+
+![costbar](figures/cost%20bar.png)
+
+```python
+bestS.chargerUsagePlot()
+```
+
+![charger usage](figures/charger%20usage.png)
+
+```python
+bestS.chargingPowerPlot()
+```
+
+![charging power](figures/charging%20power.png)
