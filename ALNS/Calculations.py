@@ -119,7 +119,7 @@ def greedyChargingTime(evsp:EVSP, schedule:Schedule, trip1:int, trip2:int):
         availableR = {}
         for r_ in possibleR:
             num = calVehNumList(evsp, schedule, r_)
-            if (max(num) < evsp.capacity):
+            if (max(num) < evsp.stationCap):
                 availableR[r_] = evsp.c_e[r_]
         if len(availableR) != 0:
             r = min(availableR, key=availableR.get)

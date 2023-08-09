@@ -11,10 +11,10 @@ def initialize(evsp:EVSP):
     """
     Provide initialize feasible solution using greedy heuristic.
     """
-    k0 = max(evsp.E_k, key=evsp.E_k.get)  # initial veh_type
+    k0 = max(evsp.E_k, key=evsp.E_k.get)  # initial veh_type has the largest capacity
     T = [i for i in evsp.T]  # temp trip set
     newSchedule = Schedule(evsp, [], {})  # dict, veh_no:[type:int, schedule:list, time division:dict]
-    S = []  # schedule list
+    S = []  # trip chain list of single duty
     R = {}  # time division dict for charging nodes
 
     while T:
@@ -173,7 +173,7 @@ def choose_r(evsp, f, R):
                 if index_before > 0:  # considering r1, r2...
                     num_before += sum(map(('r%d'%(index_before)).__eq__, R.values()))
             num.append(num_before)
-        if  (max(num) < evsp.capacity):  # considering capacity
+        if  (max(num) < evsp.stationCap):  # considering capacity
             R[f] = r
             break
         
@@ -196,12 +196,12 @@ def energy_violate(evsp, k, Y, i, j):
     return True if able to complete trip j after trip i
     """
     if i in evsp.F:
-        if (Y[-1] + calCharge(evsp, k, Y[-1]) - evsp.e_kij[k][(i,j)]) < evsp.sigma * evsp.E_k[k]:
+        if (Y[-1] + calCharge(evsp, k, Y[-1]) - evsp.e_kij[k][(i,j)]) < evsp.batteryLB * evsp.E_k[k]:
             return True
         else:
             return False
     else:  # i is trip node
-        if (Y[-1] - evsp.e_ki[k][i] - evsp.e_kij[k][(i,j)] - evsp.e_ki[k][j])< evsp.sigma * evsp.E_k[k]:  # safe energy level
+        if (Y[-1] - evsp.e_ki[k][i] - evsp.e_kij[k][(i,j)] - evsp.e_ki[k][j]) < evsp.batteryLB * evsp.E_k[k]:  # safe energy level
             return True
         else:
             return False

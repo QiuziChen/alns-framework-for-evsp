@@ -6,16 +6,16 @@ from .InsertOperators import randomInsert, greedyInsert
 
 import math
 import random
+import numpy as np
 from tqdm import tqdm
 from copy import deepcopy
 from timeit import default_timer as timer
 
-# import matplotlib
-# import matplotlib.pyplot as plt
-# plt.rcParams['font.sans-serif'] = ['STSong']
-# plt.rcParams['figure.dpi'] = 120
-# plt.rcParams['xtick.labelsize'] = 'large'
-# plt.rcParams['ytick.labelsize'] = 'large'
+import matplotlib
+import matplotlib.pyplot as plt
+plt.rcParams['figure.dpi'] = 100
+plt.rcParams['xtick.labelsize'] = 'large'
+plt.rcParams['ytick.labelsize'] = 'large'
 
 
 """
@@ -53,7 +53,6 @@ class ALNS():
         terminate=True,
         terminateLength=2000,
         printLog=True,
-        nightCharge=False
     ):
         """
         iterMax: maximum iteration
@@ -85,7 +84,7 @@ class ALNS():
             self.terminateLength = self.iterMax
 
         self.printLog = printLog
-        self.nightCharge = nightCharge
+        self.nightCharge = evsp.nightCharge
         if self.nightCharge:
             self.chargeProb = 0
 
@@ -208,48 +207,45 @@ class ALNS():
     #             self.historyDuty.append(duty)
 
 
-    # def plotWeights(self):
-    #     """
-    #     Display history weights of operators.
-    #     """
-    #     lineStyle = {1:'k-', 2:'k--', 3:'k-.', 4:'k:'}
-    #     fig, ax = plt.subplots(2,1, figsize=(14,6))
-    #     for k,v in self.weights.historyWeightR.items():
-    #         ax[0].plot(v, lineStyle[k], label=self.weights.removeOperators[k].__name__)
-    #     ax[0].legend(fontsize=15, loc=1)
-    #     for k,v in self.weights.historyWeightI.items():
-    #         ax[1].plot(v, lineStyle[k], label=self.weights.insertOperators[k].__name__)
-    #     ax[1].legend(fontsize=15, loc=1)
+    def plotWeights(self):
+        """
+        Display history weights of operators.
+        """
+        lineStyle = {1:'k-', 2:'k--', 3:'k-.', 4:'k:'}
+        fig, ax = plt.subplots(2,1, figsize=(14,8))
+        for k,v in self.weights.historyWeightR.items():
+            ax[0].plot(v, lineStyle[k], label=self.weights.removeOperators[k].__name__)
+        ax[0].legend(fontsize=15, loc=1)
+        for k,v in self.weights.historyWeightI.items():
+            ax[1].plot(v, lineStyle[k], label=self.weights.insertOperators[k].__name__)
+        ax[1].legend(fontsize=15, loc=1)
 
-    #     for ax_ in ax:
-    #         ticks = range(len(self.historyBestCost)//self.segLength+1)
-    #         ax_.set_xlim(0, len(self.historyBestCost)//self.segLength)
-    #         ax_.set_xticks(ticks)
-    #         ax_.set_xticklabels([i*100 for i in ticks])
+        for ax_ in ax:
+            ticks = np.arange(0, self.totalIter//self.segLength+1, 10)
+            ax_.set_xlim(0, self.totalIter//self.segLength)
+            ax_.set_xticks(ticks)
+            ax_.set_xticklabels(ticks*self.segLength)
         
-    #     fig.supylabel("Weights  of  Operators", fontsize=20, x=0.08)
-    #     fig.supxlabel("Iteration  Number", fontsize=20, y=0.03)
-    #     plt.show()
+        fig.supylabel("Weights of Operators", fontsize=20, x=0.08)
+        fig.supxlabel("Iteration Number", fontsize=20, y=0.03)
+        plt.show()
 
 
-    # def plotEvaluation(self, show=True, save=False, savePath='plot.png'):
-    #     """
-    #     Display history cost change.
-    #     """
-    #     fig, ax = plt.subplots(1,1,figsize=(14,6))
-    #     ax.plot(self.historyCurrentCost, 'k--', label="Current Cost / yuan")
-    #     ax.plot(self.historyBestCost, 'k-', label="Best Cost / yuan")
-    #     # ax.set_xticks(list(range(1, len(self.historyBestCost)+1), 100))
-    #     ax.set_xlim(1, len(self.historyBestCost))
-    #     ax.set_ylabel("Cost  Evaluation", fontsize=20)
+    def plotEvaluation(self):
+        """
+        Display history cost change.
+        """
+        fig, ax = plt.subplots(1,1,figsize=(14,6))
+        ax.plot(self.historyCurrentCost, 'k--', label="Current Cost / yuan")
+        ax.plot(self.historyBestCost, 'k-', label="Best Cost / yuan")
+        # ax.set_xticks(list(range(1, len(self.historyBestCost)+1), 100))
+        ax.set_xlim(1, len(self.historyBestCost))
+        ax.set_ylabel("Cost Evaluation", fontsize=20)
+        ax.set_xlabel("Iteration Number", fontsize=20)
 
-    #     plt.legend(fontsize=20, loc=1)
-    #     plt.grid(zorder=0)
-
-    #     if save is True:
-    #         plt.savefig(savePath)
-    #     if show is True:
-    #         plt.show()
+        plt.legend(fontsize=20, loc=1)
+        plt.grid(zorder=0)
+        plt.show()
         
         
     
