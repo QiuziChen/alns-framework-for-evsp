@@ -18,11 +18,12 @@ class EVSP():
         self,
         timetable:pd.DataFrame, 
         batteryLB=0.2, # vehicle param, lower bound of battery level
-        batteryUB=1.0, # vehicle param, upper bound of battery level 
+        # batteryUB=1.0, # vehicle param, upper bound of battery level 
         stationCap=-1, # model param, charging station capacity
         delta=10, # operating param, minimum time interval / min
         U=3, # operating param, number of delta in a fixed charging duration
         lineChange=True, # operating param, whether line change activities are allowed for BEBs
+        nightCharge=False,  # night charging mode
     ):
         """
         [timetable]
@@ -35,16 +36,17 @@ class EVSP():
         delta: minimum time interval, default=10(min)
         U: number of delta in a fixed charging duration, default=3 (delta=10, U=3 means the fixed charging duration=30min)
         lineChange: whether line change activities are allowed for BEBs, default=True
+        nightCharge: whether night charging mode is adopted
         """
         
         self.timetable = timetable
         self.stationCap = stationCap
         self.batteryLB = batteryLB
-        self.batteryUB = batteryUB
+        # self.batteryUB = batteryUB
         self.delta = delta
         self.U = U
         self.lineChange = lineChange
-
+        self.nightCharge = nightCharge
 
     def setVehTypes(
             self,
@@ -156,11 +158,11 @@ class EVSP():
             ax.set_ylabel("SOC", weight="bold")
             ax.grid(linestyle=':')
 
-            for k in evsp.K:
-                E = evsp.E_k[k]  # kWh
+            for k in self.K:
+                E = self.E_k[k]  # kWh
                 y = np.array([0, 100])
-                x = y / 100 * E / evsp.v_k[k]
-                ax.plot(x, y, label="Veh Type: %d(%.1f kWh)" % (k, evsp.E_k[k]))
+                x = y / 100 * E / self.v_k[k]
+                ax.plot(x, y, label="Veh Type: %d(%.1f kWh)" % (k, self.E_k[k]))
                 ax.scatter(x, y)
                 ax.text(x[-1], y[-1], "(%d,%d)" % (x[-1], y[-1]), horizontalalignment='center')
             plt.legend()
@@ -172,11 +174,11 @@ class EVSP():
             ax.set_ylabel("SOC", weight="bold")
             ax.grid(linestyle=':')
 
-            for k in evsp.K:
-                E = evsp.E_k[k]  # kWh
-                x = np.array(evsp.c_kb[k][:-1])
-                y = np.array(evsp.a_kb[k][:-1]) * 100
-                ax.plot(x, y, label="Veh Type: %d(%.1f kWh)" % (k, evsp.E_k[k]))
+            for k in self.K:
+                E = self.E_k[k]  # kWh
+                x = np.array(self.c_kb[k][:-1])
+                y = np.array(self.a_kb[k][:-1]) * 100
+                ax.plot(x, y, label="Veh Type: %d(%.1f kWh)" % (k, self.E_k[k]))
                 ax.scatter(x, y)
                 ax.text(x[-1], y[-1], "(%d,%d)" % (x[-1], y[-1]), horizontalalignment='center')
             plt.legend()
@@ -302,6 +304,7 @@ class EVSP():
 
         # --- cost ---
         
+        c_e = self.c_e
         self.c_e = {}  # unit electricity cost
         ## time of use
         if self.ToU:
@@ -311,7 +314,7 @@ class EVSP():
             pass
         else:
             for r in self.R:
-                self.c_e[r] = self.c_e  # /kWh
+                self.c_e[r] = c_e  # /kWh
 
 
     def printParams(self):
@@ -322,9 +325,10 @@ class EVSP():
               "Number of Trips:", self.n, "\n",
               "Number of Vehicle Types:", self.k_num, "\n",
               "Battery Capacity:", self.E_k, "\n",
-              "Safe Range of Battery Level:", self.batteryLB, self.batteryUB, "\n",
+              "Lowest Battery Level:", self.batteryLB, "\n",
               "Station Capacity:", "not considered" if self.stationCap==-1 else self.stationCap, "\n",
               "Allow Line Change:", self.lineChange, "\n",
+              "Adopt Night Change:", self.nightCharge, "\n",
               "Charging Function:", self.chargingFuncType, "\n",
               "Time Interval:", self.delta, "\n",
               "Fixed Recharging Time:", self.delta*self.U,

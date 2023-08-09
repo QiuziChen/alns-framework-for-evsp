@@ -128,20 +128,22 @@ class Schedule():
         Return True if the capacity constraints are satisfied, else Flase.
         """
         feasibility = True
-        for r in set(self.R.values()):
-            num = []  # number of vehicle in the station before r when i is charging
-            for u in range(self.evsp.U):  # 0, 1, 2...
-                index = int(r[1:])+u  # index of r to check capacity, if r=r3, then index=3,4,5...
-                num_before = 0
-                for u in range(self.evsp.U):
-                    index_before = index-u  # index of r when vehicle is still being charged
-                    if index_before > 0:  # considering r1, r2...
-                        num_before += sum(map(('r%d'%(index_before)).__eq__, self.R.values()))
-                num.append(num_before)
-            if (max(num) > self.evsp.capacity):
-                feasibility = False
-        
-        return feasibility
+        if self.evsp.stationCap < 0:
+            return feasibility
+        else:
+            for r in set(self.R.values()):
+                num = []  # number of vehicle in the station before r when i is charging
+                for u in range(self.evsp.U):  # 0, 1, 2...
+                    index = int(r[1:])+u  # index of r to check capacity, if r=r3, then index=3,4,5...
+                    num_before = 0
+                    for u in range(self.evsp.U):
+                        index_before = index-u  # index of r when vehicle is still being charged
+                        if index_before > 0:  # considering r1, r2...
+                            num_before += sum(map(('r%d'%(index_before)).__eq__, self.R.values()))
+                    num.append(num_before)
+                if (max(num) > self.evsp.stationCap):
+                    feasibility = False
+            return feasibility
 
 
     def calCost(self):
@@ -165,7 +167,7 @@ class Schedule():
         return self.totalCost
 
 
-    def printTable(self):
+    def printTimetable(self):
         """
         Print out a table(DataFrame) of the schedule.
         """
@@ -179,7 +181,7 @@ class Schedule():
     # --- Plot ---
 
 
-    def displayTimetable(self):
+    def plotTimetable(self):
         """
         Display timetable & schedule in form of Gantt Chart.
         """

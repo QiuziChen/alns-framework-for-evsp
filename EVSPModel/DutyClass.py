@@ -91,7 +91,7 @@ class Duty():
         
         # charged to full after daily operation
         self.chargingCost += (self.evsp.E_k[self.K] - y) * min(self.evsp.c_e.values())
-        
+
         # vehicle cost
         if self.evsp.calVehCost == True:
             self.vehicleCost = self.evsp.c_k[self.K]

@@ -10,7 +10,7 @@ def calCharge(evsp:EVSP, k, y0):
     """
     Calculate charging volume of one recharging activity.
     """
-    if evsp.nonlinear_charge == False:
+    if evsp.chargingFuncType == 'linear':
         return min(evsp.E_k[k] - y0, evsp.v_k[k] * evsp.U * evsp.delta)
     else:
         E = evsp.E_k[k]
