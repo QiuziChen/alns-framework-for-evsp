@@ -43,11 +43,21 @@ def initialize(evsp:EVSP):
                 newSchedule.schedule.append(Duty(evsp, kb, S, {k:R[k] for k in S[1:-1] if type(k)==str}))
                 break
             elif energy_violate(evsp, k0, Y, i, j) == True:
-                S.append('f%d'%i)
-                Y.append(Y[-1] - evsp.e_ki[k0][i] - evsp.e_kij[k0][(i,j)])  # update energy level of fi
-                i = 'f%d'%i
-                R = choose_r(evsp,i,R)
-                continue
+                if i in evsp.F:  # still violate energy constraint after charging
+                    S.remove(i)
+                    S.append('d')  # send it to the depot
+                    if evsp.k_num == 1:
+                        kb = k0
+                    else:
+                        kb = choose_k(evsp, S, R)  # choose an optimal veh type
+                    newSchedule.schedule.append(Duty(evsp, kb, S, {k:R[k] for k in S[1:-1] if type(k)==str}))
+                    break
+                else:
+                    S.append('f%d'%i)
+                    Y.append(Y[-1] - evsp.e_ki[k0][i] - evsp.e_kij[k0][(i,j)])  # update energy level of fi
+                    i = 'f%d'%i
+                    R = choose_r(evsp,i,R)
+                    continue
             else:
                 S.append(j)
                 if i in evsp.F:
@@ -162,21 +172,22 @@ def choose_r(evsp, f, R):
     return: new R with the nearest available time division
     considering: time & capacity
     """
-    i = int(f[1:])
-    for r in [r for r in evsp.R if (f,r) in evsp.I]:
-        num = []  # number of vehicle in the station before r when i is charging
-        for u in range(evsp.U):  # 0, 1, 2...
-            index = int(r[1:])+u  # index of r to check capacity, if r=r3, then index=3,4,5...
-            num_before = 0
-            for u in range(evsp.U):
-                index_before = index-u  # index of r when vehicle still charging
-                if index_before > 0:  # considering r1, r2...
-                    num_before += sum(map(('r%d'%(index_before)).__eq__, R.values()))
-            num.append(num_before)
-        if  (max(num) < evsp.stationCap):  # considering capacity
-            R[f] = r
-            break
-        
+    if evsp.stationCap == -1:  # station capacity not considered
+        R[f] = [r for r in evsp.R if (f,r) in evsp.I][0]
+    else:
+        for r in [r for r in evsp.R if (f,r) in evsp.I]:
+            num = []  # number of vehicle in the station before r when i is charging
+            for u in range(evsp.U):  # 0, 1, 2...
+                index = int(r[1:])+u  # index of r to check capacity, if r=r3, then index=3,4,5...
+                num_before = 0
+                for u in range(evsp.U):
+                    index_before = index-u  # index of r when vehicle still charging
+                    if index_before > 0:  # considering r1, r2...
+                        num_before += sum(map(('r%d'%(index_before)).__eq__, R.values()))
+                num.append(num_before)
+            if  (max(num) < evsp.stationCap):  # considering capacity
+                R[f] = r
+                break
     return R
 
 def choose_k(evsp, S, R):
