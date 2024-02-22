@@ -208,7 +208,7 @@ alns = ALNS(evsp)
 alns.solve()
 ```
 
-Functions for display the results are also provided.
+Functions for displaying the results are also provided.
 
 ```python
 alns.plotWeights()
