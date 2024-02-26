@@ -185,7 +185,7 @@ class Schedule():
         """
         Display timetable & schedule in form of Gantt Chart.
         """
-        fig, ax = plt.subplots(1,1,figsize=(16,8))
+        fig, ax = plt.subplots(1,1,figsize=(16,10))
         vehType = {1:'A',2:'B',3:'C',4:'D',5:'E',6:'F'}
         index = 0
         self.sortDuty()
