@@ -39,7 +39,10 @@ class EVSP():
         nightCharge: whether night charging mode is adopted
         """
         
-        self.timetable = timetable
+        if timetable.isna().any().any():
+            raise ValueError("Timetable contains NaN value.")
+        else:
+            self.timetable = timetable
         self.stationCap = stationCap
         self.batteryLB = batteryLB
         # self.batteryUB = batteryUB
