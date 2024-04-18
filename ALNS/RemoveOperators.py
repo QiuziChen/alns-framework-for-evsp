@@ -16,7 +16,7 @@ def randomRemoval(evsp:EVSP, schedule:Schedule, n:int):
     """
     # removedSchedule
     removedSchedule = deepcopy(schedule)
-    tripBank = random.sample(evsp.T, n)  # generate trip bank
+    tripBank = random.sample(sorted(evsp.T), n)  # generate trip bank
     
     removeList = []
     for duty in removedSchedule.schedule:  # remove trips and charging
@@ -42,7 +42,7 @@ def timeRelatedRemoval(evsp:EVSP, schedule:Schedule, n:int):
     """
     # removedSchedule = schedule
     removedSchedule = deepcopy(schedule)
-    tripBank = random.sample(evsp.T, 1)  # generate first random index
+    tripBank = random.sample(sorted(evsp.T), 1)  # generate first random index
     while len(tripBank) < n:
         i = random.choice(tripBank)
         unremoved = list(set(evsp.T) - set(tripBank))  # trips unremoved
